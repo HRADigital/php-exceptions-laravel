@@ -8,6 +8,8 @@ use HraDigital\Components\Exceptions\AbstractBaseException;
 use HraDigital\Components\Exceptions\Client\Request\RequestFailureInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
+use function assert;
+
 class InputFailureRenderer implements ExceptionRendererInterface
 {
     public static function createRenderer(): self
@@ -22,7 +24,8 @@ class InputFailureRenderer implements ExceptionRendererInterface
 
     public function renderAsJson(AbstractBaseException $exception): JsonResponse
     {
-        /** @var RequestFailureInterface $exception */
+        assert($exception instanceof RequestFailureInterface);
+
         $failed = [];
         foreach ($exception->getFailedMessages() as $fieldName => $errors) {
             foreach ($errors as $errorMessage) {

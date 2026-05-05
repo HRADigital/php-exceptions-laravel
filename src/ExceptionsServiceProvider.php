@@ -35,13 +35,15 @@ class ExceptionsServiceProvider extends ServiceProvider
 
         $renderer = $this->app->make(ExceptionRenderer::class);
 
-        $handler->renderable(static function (AbstractBaseException $exception, Request $request) use ($renderer): ?JsonResponse {
-            if (! self::isApiRequest($request)) {
-                return null;
-            }
+        $handler->renderable(
+            static function (AbstractBaseException $exception, Request $request) use ($renderer): ?JsonResponse {
+                if (! self::isApiRequest($request)) {
+                    return null;
+                }
 
-            return $renderer->renderAsJson($exception);
-        });
+                return $renderer->renderAsJson($exception);
+            }
+        );
     }
 
     /**
@@ -58,7 +60,7 @@ class ExceptionsServiceProvider extends ServiceProvider
         }
 
         $route = $request->route();
-        if ($route !== null && is_object($route) && method_exists($route, 'getName')) {
+        if (is_object($route) && method_exists($route, 'getName')) {
             $name = $route->getName();
             if (is_string($name) && str_starts_with($name, 'api.')) {
                 return true;
