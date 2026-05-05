@@ -41,13 +41,6 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      - name: Configure Composer auth (private packages)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Allows Composer to clone any other private hradigital/* repo if added later as a dep.
-          composer config --global --auth github-oauth.github.com "${GITHUB_TOKEN}"
-
       - name: Pin Laravel & Testbench for matrix cell
         run: |
           composer require --no-update --no-interaction --dev \

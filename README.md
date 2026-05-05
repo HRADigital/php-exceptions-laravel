@@ -1,5 +1,11 @@
 # php-exceptions-laravel
 
+[![Latest Stable Version](https://poser.pugx.org/hradigital/php-exceptions-laravel/v/stable)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
+[![Total Downloads](https://poser.pugx.org/hradigital/php-exceptions-laravel/downloads)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
+[![PHP Version Require](https://poser.pugx.org/hradigital/php-exceptions-laravel/require/php)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
+[![License](https://poser.pugx.org/hradigital/php-exceptions-laravel/license)](https://github.com/HRADigital/php-exceptions-laravel/blob/master/LICENSE)
+[![CI](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/ci.yml)
+
 Laravel wiring + JSON renderer for [`hradigital/php-exceptions`](https://packagist.org/packages/hradigital/php-exceptions).
 
 The base library ships platform-agnostic domain exceptions (`AbstractBaseException` and the `Client/`+`Server/` trees, aligned with HTTP 4xx/5xx semantics). This package translates them into a uniform JSON response at the HTTP boundary and auto-registers itself with Laravel's exception handler, but **only for API requests** — browser requests still fall through to Laravel's default error pages.
@@ -10,31 +16,14 @@ The base library ships platform-agnostic domain exceptions (`AbstractBaseExcepti
 | Requires         | PHP `^8.1`, `hradigital/php-exceptions` `^1.0`           |
 | Laravel          | `^10.0` &middot; `^11.0` &middot; `^12.0`                |
 | License          | GPL-3.0-or-later                                         |
-| Status           | **Private** &mdash; not yet published to Packagist       |
 
 ---
 
 ## Installation
 
-> The repository is currently private. Until it is published, install from its private GitHub source via a Composer VCS entry.
-
-In the consuming project's `composer.json`:
-
-```json
-{
-    "repositories": [
-        { "type": "vcs", "url": "git@github.com:HRADigital/php-exceptions-laravel.git" }
-    ]
-}
-```
-
-Then:
-
 ```bash
-composer require hradigital/php-exceptions-laravel:dev-master
+composer require hradigital/php-exceptions-laravel
 ```
-
-Composer will read GitHub auth from `auth.json` or `COMPOSER_AUTH`. Once the package is on Packagist, the standard `composer require hradigital/php-exceptions-laravel` will apply.
 
 ## Registration
 
@@ -172,7 +161,7 @@ composer stan        # phpstan (level 6)
 | 8.3   |            | &#10003;   | &#10003;   |
 | 8.4   |            |            | &#10003;   |
 
-The workflow pins `illuminate/*` and `orchestra/testbench` per matrix cell with `composer require --no-update` before installing. Because the repo is private, `secrets.GITHUB_TOKEN` is wired into `composer config github-oauth.github.com` so any future private peer dependency under the `HRADigital` org resolves cleanly during install.
+The workflow pins `illuminate/*` and `orchestra/testbench` per matrix cell with `composer require --no-update` before installing.
 
 ## Testing
 

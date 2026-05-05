@@ -16,6 +16,11 @@
             "email": "github@hradigital.com"
         }
     ],
+    "homepage": "https://github.com/HRADigital/php-exceptions-laravel",
+    "support": {
+        "issues": "https://github.com/HRADigital/php-exceptions-laravel/issues",
+        "source": "https://github.com/HRADigital/php-exceptions-laravel"
+    },
     "require": {
         "php": "^8.1",
         "hradigital/php-exceptions": "^1.0",
