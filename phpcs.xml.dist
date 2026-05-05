@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<ruleset name="hradigital">
+    <description>Coding standard for hradigital/php-exceptions-laravel.</description>
+    <file>src</file>
+    <arg name="colors"/>
+    <arg value="p"/>
+    <rule ref="PSR12"/>
+</ruleset>
