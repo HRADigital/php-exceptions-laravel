@@ -9,7 +9,7 @@ The base library ships platform-agnostic domain exceptions (`AbstractBaseExcepti
 | Namespace        | `HraDigital\Components\ExceptionRenderer`                |
 | Requires         | PHP `^8.1`, `hradigital/php-exceptions` `^1.0`           |
 | Laravel          | `^10.0` &middot; `^11.0` &middot; `^12.0`                |
-| License          | MIT                                                      |
+| License          | GPL-3.0-or-later                                         |
 | Status           | **Private** &mdash; not yet published to Packagist       |
 
 ---
@@ -186,4 +186,4 @@ The `tests/` suite covers every class in the package:
 
 ## License
 
-MIT &mdash; see [LICENSE](LICENSE).
+GPL-3.0-or-later &mdash; see [LICENSE](LICENSE). This matches the upstream `hradigital/php-exceptions` license.

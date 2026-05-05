@@ -2,7 +2,7 @@
     "name": "hradigital/php-exceptions-laravel",
     "description": "Laravel wrapper for hradigital/php-exceptions, wiring Laravel's error handling and providing a JSON Renderer for these Exceptions.",
     "type": "library",
-    "license": "MIT",
+    "license": "GPL-3.0-or-later",
     "keywords": [
         "hradigital",
         "laravel",
