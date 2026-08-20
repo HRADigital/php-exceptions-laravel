@@ -61,6 +61,14 @@ jobs:
           coverage: none
           tools: composer:v2
 
+      # hradigital/php-static-analysis is a private repository, so the default
+      # GITHUB_TOKEN cannot reach it. COMPOSER_TOKEN must be a PAT with read
+      # access to it, stored as a repository secret.
+      - name: Authenticate Composer against private repositories
+        env:
+          COMPOSER_TOKEN: ${{ secrets.COMPOSER_TOKEN }}
+        run: composer config --global --auth github-oauth.github.com "$COMPOSER_TOKEN"
+
       - name: Pin Laravel & Testbench for matrix cell
         run: |
           composer require --no-update --no-interaction --dev \
