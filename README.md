@@ -6,18 +6,27 @@
 [![License](https://poser.pugx.org/hradigital/php-exceptions-laravel/license)](https://github.com/HRADigital/php-exceptions-laravel/blob/master/LICENSE)
 [![CI](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/ci.yml)
 
-Laravel wiring + JSON renderer for [`hradigital/php-exceptions`](https://packagist.org/packages/hradigital/php-exceptions).
+Laravel wiring and JSON / web renderers for `hradigital/php-exceptions`.
 
-The base library ships platform-agnostic domain exceptions (`AbstractBaseException` and the `Client/`+`Server/` trees, aligned with HTTP 4xx/5xx semantics). This package translates them into a uniform JSON response at the HTTP boundary and auto-registers itself with Laravel's exception handler, but **only for API requests** — browser requests still fall through to Laravel's default error pages.
+The base library ships platform-agnostic domain exceptions - `AbstractBaseException` and the `Client/` and `Server/` trees, aligned with HTTP 4xx/5xx semantics. It knows nothing about a transport, leaving every application to decide again how a thrown domain exception becomes a response.
+
+This package decides it once. API requests get a uniform JSON body; web requests throwing a 422 land back on the originating form with errors and old input. Everything else falls through to Laravel's own handler.
+
+- **`ExceptionRenderer`** - the JSON strategy dispatcher, resolving an exception to the first strategy that supports it, with an always-matching fallback.
+- **`WebRenderer`** - the web strategy dispatcher, returning a redirect for the exceptions it handles and `null` for everything else.
+- **`ExceptionsServiceProvider`** - auto-discovered, binding both dispatchers as singletons and registering two `renderable()` hooks on Laravel's exception handler.
+- **API detection** - one shared rule across both hooks: the `Accept` header, a JSON body, an `api/*` path, or an `api.*` route name.
+- **Bundled strategies** - `DefaultRenderer` and `InputFailureRenderer` for JSON, `InputFailureWebRenderer` and `UnprocessableEntityWebRenderer` for redirects.
+- **Custom strategies** - resolve the singleton and prepend your own; the last registration wins.
+
+## Requirements
 
 | Package          | `hradigital/php-exceptions-laravel`                      |
 | ---------------- | -------------------------------------------------------- |
 | Namespace        | `HraDigital\Components\ExceptionRenderer`                |
 | Requires         | PHP `^8.1`, `hradigital/php-exceptions` `^1.0`           |
 | Laravel          | `^10.0` &middot; `^11.0` &middot; `^12.0`                |
-| License          | GPL-3.0-or-later                                         |
-
----
+| License          | MPL-2.0                                                  |
 
 ## Installation
 
@@ -49,10 +58,10 @@ return [
 
 On `boot()`, the provider:
 
-1. Binds `ExceptionRenderer` as a singleton in the container (so app code can resolve it and add custom strategies).
-2. Hooks into Laravel's exception handler via `renderable()`, intercepting any thrown `AbstractBaseException`.
+1. Binds `ExceptionRenderer` and `WebRenderer` as singletons in the container (so app code can resolve them and add custom strategies).
+2. Registers two `renderable()` hooks on Laravel's exception handler — one for API requests (returns `JsonResponse`), one for web requests (returns `RedirectResponse`).
 
-The hook **only renders** when the incoming request is treated as an API request:
+API detection is shared between both hooks:
 
 | Signal                                                  | Detected via                                   |
 | ------------------------------------------------------- | ---------------------------------------------- |
@@ -61,7 +70,8 @@ The hook **only renders** when the incoming request is treated as an API request
 | URL path matches `api/*` (or is exactly `api`)          | `$request->is('api/*')`                        |
 | Matched route name starts with `api.`                   | `$request->route()?->getName()`                |
 
-For any other request, the callback returns `null`, so Laravel's default handler keeps rendering its usual HTML / Whoops / Blade error pages.
+- The **JSON hook** runs only for API requests; for web requests it returns `null`.
+- The **web hook** runs only for non-API requests, and only when one of its strategies (`InputFailureWebRenderer`, `UnprocessableEntityWebRenderer`) supports the exception — i.e. for `UnprocessableEntityException` or its `RequestFailureException` specialisation. Anything else returns `null`, so Laravel's default handler keeps rendering its usual HTML / Whoops / Blade error pages.
 
 ## Response shapes
 
@@ -95,6 +105,21 @@ Exceptions implementing `HraDigital\Components\Exceptions\Client\Request\Request
 ```
 
 `rules` mirrors `getFailures()` (the field-keyed rule list). `failed` is the flattened, per-message list derived from `getFailedMessages()` &mdash; one entry per `{fieldName, message}` pair, preserving field order.
+
+### Web (redirect-back) responses
+
+For non-API requests the `WebRenderer` runs two strategies, in order:
+
+| Strategy                          | Matches                                              | Response                                                                       |
+| --------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `InputFailureWebRenderer`         | `RequestFailureInterface` (structured field errors)  | `back()->withErrors($exception->getFailedMessages())->withInput($input)`       |
+| `UnprocessableEntityWebRenderer`  | `UnprocessableEntityException` (and any subclass)    | `back()->with('error', $exception->getMessage())->withInput($input)`           |
+
+This means:
+
+- Forms throwing `RequestFailureException::withFailures([...], [...])` get per-field errors flashed under the default `MessageBag` &mdash; Blade `@error('field')` / `$errors->has('field')` work out of the box.
+- Plain `UnprocessableEntityException('the field is invalid')` flashes a single `error` key &mdash; render it in the layout via `@if (session('error')) ... @endif`.
+- Submitted input is always flashed via `withInput()` so `old('field')` works in the form.
 
 ## Adding a custom renderer strategy
 
@@ -133,11 +158,15 @@ app(ExceptionRenderer::class)->add(new TenantQuotaRenderer());
 
 | Class / interface                                                              | Purpose                                                                         |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `ExceptionRenderer`                                                            | Strategy dispatcher; `renderAsJson()`, `add()`, `getStrategies()`, factory.     |
-| `Renderers\ExceptionRendererInterface`                                         | Contract every strategy implements (`supports()` + `renderAsJson()`).           |
-| `Renderers\DefaultRenderer`                                                    | Always-matching fallback; emits the default response shape.                     |
-| `Renderers\InputFailureRenderer`                                               | Matches `RequestFailureInterface`; emits validation-failure shape.              |
-| `ExceptionsServiceProvider`                                                    | Singleton binding + Laravel `renderable()` hook with API-request gating.        |
+| `ExceptionRenderer`                                                            | JSON strategy dispatcher; `renderAsJson()`, `add()`, `getStrategies()`, factory. |
+| `Renderers\ExceptionRendererInterface`                                         | Contract every JSON strategy implements (`supports()` + `renderAsJson()`).      |
+| `Renderers\DefaultRenderer`                                                    | Always-matching JSON fallback; emits the default response shape.                |
+| `Renderers\InputFailureRenderer`                                               | Matches `RequestFailureInterface`; emits validation-failure JSON shape.         |
+| `WebRenderer`                                                                  | Web strategy dispatcher; `renderAsRedirect()`, `add()`, `getStrategies()`, factory. Returns `null` when no strategy supports the exception. |
+| `Renderers\WebRendererInterface`                                               | Contract every web strategy implements (`supports()` + `renderAsRedirect()`).   |
+| `Renderers\InputFailureWebRenderer`                                            | Matches `RequestFailureInterface`; redirects back with `withErrors` + `withInput`. |
+| `Renderers\UnprocessableEntityWebRenderer`                                     | Matches `UnprocessableEntityException`; redirects back with flash `error` + `withInput`. |
+| `ExceptionsServiceProvider`                                                    | Singleton bindings + two Laravel `renderable()` hooks (JSON for API, redirect for web). |
 
 ## Local development
 
@@ -170,9 +199,19 @@ The `tests/` suite covers every class in the package:
 - `ExceptionRendererTest` &mdash; factory wiring, fallback path, strategy routing, prepend ordering, custom-constructor wiring.
 - `Renderers/DefaultRendererTest` &mdash; status/message/code mapping, conditional `data` key.
 - `Renderers/InputFailureRendererTest` &mdash; flattening of `failed`, `rules` mirroring, empty-payload behaviour.
-- `ExceptionsServiceProviderTest` &mdash; Testbench-based: singleton binding, end-to-end HTTP rendering for JSON / `api/*` requests, and direct callback invocation proving non-API requests pass through (`null` return).
+- `WebRendererTest` &mdash; default strategy wiring, null-on-unsupported, prepend ordering for custom strategies.
+- `Renderers/InputFailureWebRendererTest` &mdash; back-with-errors flash + old-input restoration.
+- `Renderers/UnprocessableEntityWebRendererTest` &mdash; back-with-error flash, `withInput`, subclass support.
+- `ExceptionsServiceProviderTest` &mdash; Testbench-based: singleton bindings, end-to-end JSON rendering for `api/*` requests, end-to-end redirect rendering for `web` routes throwing `UnprocessableEntityException`, and direct callback invocation proving each hook returns `null` outside its scope.
 - `Support/Stubs` &mdash; shared anonymous-class factories for a generic exception and a `RequestFailureInterface` exception, excluded from the test suite.
 
 ## License
 
-GPL-3.0-or-later &mdash; see [LICENSE](LICENSE). This matches the upstream `hradigital/php-exceptions` license.
+Mozilla Public License 2.0 - see [LICENSE](LICENSE). This matches the upstream
+`hradigital/php-exceptions` license.
+
+You may use this package in closed-source and commercial products. If you modify and
+distribute the package's own files, those files must remain under the MPL-2.0.
+
+The `HRADigital` name and package names are not covered by that licence - see
+[TRADEMARK.md](TRADEMARK.md).
