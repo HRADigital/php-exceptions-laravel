@@ -3,8 +3,13 @@
 [![Latest Stable Version](https://poser.pugx.org/hradigital/php-exceptions-laravel/v/stable)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
 [![Total Downloads](https://poser.pugx.org/hradigital/php-exceptions-laravel/downloads)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
 [![PHP Version Require](https://poser.pugx.org/hradigital/php-exceptions-laravel/require/php)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
-[![License](https://poser.pugx.org/hradigital/php-exceptions-laravel/license)](https://github.com/HRADigital/php-exceptions-laravel/blob/master/LICENSE)
+[![License](https://img.shields.io/github/license/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/blob/master/LICENSE)
+[![Release](https://img.shields.io/github/v/release/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/releases)
 [![CI](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/ci.yml)
+[![Laravel](https://img.shields.io/badge/Laravel-%5E12.0-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
+[![PHPStan](https://img.shields.io/badge/PHPStan-level%206-brightgreen)](phpstan.neon.dist)
+[![Code Style](https://img.shields.io/badge/code%20style-PSR--12-blue)](phpcs.xml.dist)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
 Laravel wiring and JSON / web renderers for `hradigital/php-exceptions`.
 
