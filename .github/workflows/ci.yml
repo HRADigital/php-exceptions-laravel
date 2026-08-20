@@ -42,11 +42,18 @@ jobs:
         # Laravel 10 and 11 are no longer matrix cells. Both branches are past security
         # support, so every `laravel/framework` release in them carries open advisories
         # and Composer's `policy.advisories.block` refuses to resolve them.
+        #
+        # Laravel 13 requires PHP ^8.3, so it has no 8.2 cell - 8.2 is covered by Laravel
+        # 12 only, which is why the package keeps `^12.0 || ^13.0` rather than 13 alone.
+        # Each Laravel line pairs with its own Testbench major: 12 -> 10.*, 13 -> 11.*.
         include:
           - { php: '8.2', laravel: '12.*', testbench: '10.*' }
           - { php: '8.3', laravel: '12.*', testbench: '10.*' }
           - { php: '8.4', laravel: '12.*', testbench: '10.*' }
           - { php: '8.5', laravel: '12.*', testbench: '10.*' }
+          - { php: '8.3', laravel: '13.*', testbench: '11.*' }
+          - { php: '8.4', laravel: '13.*', testbench: '11.*' }
+          - { php: '8.5', laravel: '13.*', testbench: '11.*' }
 
     steps:
       - name: Checkout
