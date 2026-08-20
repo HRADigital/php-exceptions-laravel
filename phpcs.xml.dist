@@ -5,4 +5,14 @@
     <arg name="colors"/>
     <arg value="p"/>
     <rule ref="PSR12"/>
+
+    <!-- Companion Application-layer ruleset from hradigital/php-static-analysis. This package
+         is a component library - it ships no Bounded Contexts and no Application layer - so the
+         include-pattern currently matches nothing and the sniffs stay dormant. It is wired in
+         anyway for the same reason phpstan.neon.dist keeps the dependency declared: the rule set
+         stays in lockstep across the packages, and the layer sniffs switch on for free if this
+         package ever grows an Application layer. -->
+    <rule ref="vendor/hradigital/php-static-analysis/ruleset-application.xml">
+        <include-pattern>*/Application/*</include-pattern>
+    </rule>
 </ruleset>
