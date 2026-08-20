@@ -1,4 +1,33 @@
 parameters:
     level: 6
+
     paths:
         - src
+
+    # Native signatures are the source of truth. Laravel's `Request::route()` is documented
+    # as returning a Route, while at runtime it returns Route|object|string|null - the
+    # defensive is_object()/method_exists() guards in ExceptionsServiceProvider are correct
+    # and must not be reported as always-true because a vendor docblock says otherwise.
+    treatPhpDocTypesAsCertain: false
+
+    # hradigital/php-static-analysis is auto-included by phpstan/extension-installer. Its
+    # rules are Bounded Context architecture rules for DDD applications, and every one of
+    # them is keyed on `rootNamespace`. This package is a component library - it ships no
+    # Bounded Contexts and no Domain/Application/Infrastructure layers - so the parameters
+    # stay blank on purpose, which keeps those rules silent instead of misfiring here. The
+    # dependency is still declared so the rule set stays in lockstep across the packages,
+    # and so the layer rules switch on for free if this package ever grows layers.
+    codingStandards:
+        rootNamespace: ''
+        useCaseBaseClass: ''
+        eventBaseClass: ''
+        exceptionBaseNamespace: ''
+        clientExceptionNamespace: ''
+        serverExceptionNamespace: ''
+        controllerBaseClass: ''
+        formRequestBaseClass: ''
+        inboundEventClass: ''
+        persistenceAttribute: ''
+        eventGeneratorTrait: ''
+        nonBoundedContextSegments: []
+        contractAllowedNamespaces: []
