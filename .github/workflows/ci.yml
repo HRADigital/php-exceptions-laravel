@@ -14,6 +14,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The release version is derived from commit messages, so a malformed message
+  # silently costs a release. This gate makes that a CI failure instead.
+  commits:
+    name: Semantic Commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # commitlint needs the history to resolve the range it validates.
+          fetch-depth: 0
+
+      # Validates only the commits introduced by this push/PR - the existing
+      # non-conventional history is never re-checked. Rules: commitlint.config.mjs
+      - name: Validate commit messages
+        uses: wagoid/commitlint-github-action@v6
+
   quality:
     name: Quality (PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }})
     runs-on: ubuntu-latest
@@ -21,8 +39,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # PHP 8.1 is still a supported runtime for consumers ("php": "^8.1"), but it is not
+        # a matrix cell: the dev toolchain requires 8.2+ (hradigital/php-static-analysis),
+        # so `composer update` with dev dependencies cannot resolve on 8.1.
         include:
-          - { php: '8.1', laravel: '10.*', testbench: '8.*' }
           - { php: '8.2', laravel: '10.*', testbench: '8.*' }
           - { php: '8.2', laravel: '11.*', testbench: '9.*' }
           - { php: '8.2', laravel: '12.*', testbench: '10.*' }
