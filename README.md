@@ -24,8 +24,8 @@ This package decides it once. API requests get a uniform JSON body; web requests
 | Package          | `hradigital/php-exceptions-laravel`                      |
 | ---------------- | -------------------------------------------------------- |
 | Namespace        | `HraDigital\Components\ExceptionRenderer`                |
-| Requires         | PHP `^8.1`, `hradigital/php-exceptions` `^1.0`           |
-| Laravel          | `^10.0` &middot; `^11.0` &middot; `^12.0`                |
+| Requires         | PHP `^8.2`, `hradigital/php-exceptions` `^1.0`           |
+| Laravel          | `^12.0`                                                  |
 | License          | MPL-2.0                                                  |
 
 ## Installation
@@ -38,20 +38,12 @@ composer require hradigital/php-exceptions-laravel
 
 The service provider is auto-discovered &mdash; no manual registration needed in most apps. If auto-discovery is disabled for this package, register it explicitly:
 
-**Laravel 11 / 12** &mdash; `bootstrap/providers.php`:
+`bootstrap/providers.php`:
 
 ```php
 return [
     HraDigital\Components\ExceptionRenderer\ExceptionsServiceProvider::class,
 ];
-```
-
-**Laravel 10 (and below)** &mdash; `config/app.php`:
-
-```php
-'providers' => ServiceProvider::defaultProviders()->merge([
-    HraDigital\Components\ExceptionRenderer\ExceptionsServiceProvider::class,
-])->toArray(),
 ```
 
 ## What the provider does
@@ -183,14 +175,16 @@ composer stan        # phpstan (level 6)
 
 `.github/workflows/ci.yml` runs on every push and PR to `master`. It executes `lint → phpcs → phpstan → phpunit` against the supported PHP × Laravel matrix:
 
-|       | Laravel 10 | Laravel 11 | Laravel 12 |
-| ----- | :--------: | :--------: | :--------: |
-| 8.1   | &#10003;   |            |            |
-| 8.2   | &#10003;   | &#10003;   | &#10003;   |
-| 8.3   |            | &#10003;   | &#10003;   |
-| 8.4   |            |            | &#10003;   |
+|       | Laravel 12 |
+| ----- | :--------: |
+| 8.2   | &#10003;   |
+| 8.3   | &#10003;   |
+| 8.4   | &#10003;   |
+| 8.5   | &#10003;   |
 
 The workflow pins `illuminate/*` and `orchestra/testbench` per matrix cell with `composer require --no-update` before installing.
+
+Laravel 10 and 11 were dropped: both branches are past security support, so every `laravel/framework` release in them carries open security advisories and Composer refuses to install them.
 
 ## Testing
 
