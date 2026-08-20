@@ -1,21 +1,27 @@
 # php-exceptions-laravel
 
-[![Latest Stable Version](https://poser.pugx.org/hradigital/php-exceptions-laravel/v/stable)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
-[![Total Downloads](https://poser.pugx.org/hradigital/php-exceptions-laravel/downloads)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
-[![PHP Version Require](https://poser.pugx.org/hradigital/php-exceptions-laravel/require/php)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
-[![License](https://img.shields.io/github/license/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/blob/master/LICENSE)
-[![Release](https://img.shields.io/github/v/release/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/releases)
 [![CI](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/ci.yml)
+[![Release Workflow](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/release.yml/badge.svg?branch=master)](https://github.com/HRADigital/php-exceptions-laravel/actions/workflows/release.yml)
+[![Release](https://img.shields.io/github/v/release/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/releases)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/hradigital/php-exceptions-laravel)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
+[![Total Downloads](https://img.shields.io/packagist/dt/hradigital/php-exceptions-laravel)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
+[![PHP Version](https://img.shields.io/packagist/php-v/hradigital/php-exceptions-laravel)](https://packagist.org/packages/hradigital/php-exceptions-laravel)
+[![License](https://img.shields.io/github/license/HRADigital/php-exceptions-laravel)](LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/commits/master)
+[![Open Issues](https://img.shields.io/github/issues/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/issues)
+[![Contributors](https://img.shields.io/github/contributors/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/graphs/contributors)
+[![Stars](https://img.shields.io/github/stars/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/stargazers)
+[![Code Size](https://img.shields.io/github/languages/code-size/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel)
 [![Laravel](https://img.shields.io/badge/Laravel-%5E12.0-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%206-brightgreen)](phpstan.neon.dist)
 [![Code Style](https://img.shields.io/badge/code%20style-PSR--12-blue)](phpcs.xml.dist)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 
-Laravel wiring and JSON / web renderers for `hradigital/php-exceptions`.
+Laravel wiring and JSON / web renderers for the `hradigital/php-exceptions` domain exception tree.
 
-The base library ships platform-agnostic domain exceptions - `AbstractBaseException` and the `Client/` and `Server/` trees, aligned with HTTP 4xx/5xx semantics. It knows nothing about a transport, leaving every application to decide again how a thrown domain exception becomes a response.
+The base library ships platform-agnostic exceptions - `AbstractBaseException` and the `Client/` and `Server/` trees, aligned with HTTP 4xx/5xx semantics - and knows nothing about a transport, leaving every application to decide again how a thrown domain exception becomes a response.
 
-This package decides it once. API requests get a uniform JSON body; web requests throwing a 422 land back on the originating form with errors and old input. Everything else falls through to Laravel's own handler.
+This package decides it once. API requests get a uniform JSON body; web requests throwing a 422 land back on the originating form with errors and old input; everything else falls through to Laravel's own handler.
 
 - **`ExceptionRenderer`** - the JSON strategy dispatcher, resolving an exception to the first strategy that supports it, with an always-matching fallback.
 - **`WebRenderer`** - the web strategy dispatcher, returning a redirect for the exceptions it handles and `null` for everything else.
