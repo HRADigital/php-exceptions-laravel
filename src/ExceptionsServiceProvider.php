@@ -1,11 +1,20 @@
 <?php
 
+/**
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) HRADigital - Hugo Rafael Azevedo.
+ */
+
 declare(strict_types=1);
 
 namespace HraDigital\Components\ExceptionRenderer;
 
 use HraDigital\Components\Exceptions\AbstractBaseException;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,6 +31,10 @@ class ExceptionsServiceProvider extends ServiceProvider
         $this->app->singleton(ExceptionRenderer::class, static function (): ExceptionRenderer {
             return ExceptionRenderer::createRenderer();
         });
+
+        $this->app->singleton(WebRenderer::class, static function (): WebRenderer {
+            return WebRenderer::createRenderer();
+        });
     }
 
     public function boot(): void
@@ -33,15 +46,26 @@ class ExceptionsServiceProvider extends ServiceProvider
             return;
         }
 
-        $renderer = $this->app->make(ExceptionRenderer::class);
+        $jsonRenderer = $this->app->make(ExceptionRenderer::class);
+        $webRenderer  = $this->app->make(WebRenderer::class);
 
         $handler->renderable(
-            static function (AbstractBaseException $exception, Request $request) use ($renderer): ?JsonResponse {
+            static function (AbstractBaseException $exception, Request $request) use ($jsonRenderer): ?JsonResponse {
                 if (! self::isApiRequest($request)) {
                     return null;
                 }
 
-                return $renderer->renderAsJson($exception);
+                return $jsonRenderer->renderAsJson($exception);
+            }
+        );
+
+        $handler->renderable(
+            static function (AbstractBaseException $exception, Request $request) use ($webRenderer): ?RedirectResponse {
+                if (self::isApiRequest($request)) {
+                    return null;
+                }
+
+                return $webRenderer->renderAsRedirect($exception, $request);
             }
         );
     }
