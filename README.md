@@ -12,7 +12,7 @@
 [![Contributors](https://img.shields.io/github/contributors/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/graphs/contributors)
 [![Stars](https://img.shields.io/github/stars/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel/stargazers)
 [![Code Size](https://img.shields.io/github/languages/code-size/HRADigital/php-exceptions-laravel)](https://github.com/HRADigital/php-exceptions-laravel)
-[![Laravel](https://img.shields.io/badge/Laravel-%5E12.0-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
+[![Laravel](https://img.shields.io/badge/Laravel-%5E12.0%20%7C%7C%20%5E13.0-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
 [![PHPStan](https://img.shields.io/badge/PHPStan-level%206-brightgreen)](phpstan.neon.dist)
 [![Code Style](https://img.shields.io/badge/code%20style-PSR--12-blue)](phpcs.xml.dist)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
@@ -36,8 +36,10 @@ This package decides it once. API requests get a uniform JSON body; web requests
 | ---------------- | -------------------------------------------------------- |
 | Namespace        | `HraDigital\Components\ExceptionRenderer`                |
 | Requires         | PHP `^8.2`, `hradigital/php-exceptions` `^1.0`           |
-| Laravel          | `^12.0`                                                  |
+| Laravel          | `^12.0 \|\| ^13.0`                                        |
 | License          | MPL-2.0                                                  |
+
+Laravel 13 itself requires PHP `^8.3`, so PHP 8.2 is supported on the Laravel 12 line only.
 
 ## Installation
 
@@ -182,16 +184,34 @@ composer cs:fix      # PSR-12 autofix
 composer stan        # phpstan (level 6)
 ```
 
+A `Makefile` wraps the same tools with scoping and a silent-on-success mode &mdash; run `make help` for the full list:
+
+```bash
+make validate                # syntax + phpcs + phpstan, run concurrently
+make validate-implementation # serial pre-merge pipeline, stops at the first failure
+make test                    # phpunit
+make lint                    # phpcs (report only)      -- `make cs` is an alias
+make lint-fix                # phpcbf autofix
+make analyse                 # phpstan (level 6)
+make syntax                  # php -l over src
+```
+
+Any target accepts `QUIET=1`, which suppresses all output on success (the test target prints only its final summary) and prints everything on failure. `FILES="a.php b.php"` scopes the file-based gates, `FILTER=SomeTest` narrows the test run, and `EXEC="docker exec <name>"` runs the PHP tools inside a container instead of natively.
+
+Note that the Makefile follows the machine-wide target naming, which differs from the Composer scripts: `make lint` is PHPCS, whereas `composer lint` is the `php -l` syntax pass (`make syntax`).
+
 ## Continuous Integration
 
 `.github/workflows/ci.yml` runs on every push and PR to `master`. It executes `lint → phpcs → phpstan → phpunit` against the supported PHP × Laravel matrix:
 
-|       | Laravel 12 |
-| ----- | :--------: |
-| 8.2   | &#10003;   |
-| 8.3   | &#10003;   |
-| 8.4   | &#10003;   |
-| 8.5   | &#10003;   |
+|       | Laravel 12 | Laravel 13 |
+| ----- | :--------: | :--------: |
+| 8.2   | &#10003;   | &mdash;    |
+| 8.3   | &#10003;   | &#10003;   |
+| 8.4   | &#10003;   | &#10003;   |
+| 8.5   | &#10003;   | &#10003;   |
+
+Laravel 13 requires PHP `^8.3`, so it has no 8.2 cell. Each Laravel line is paired with its own Testbench major &mdash; Laravel 12 with `orchestra/testbench` `10.*`, Laravel 13 with `11.*`.
 
 The workflow pins `illuminate/*` and `orchestra/testbench` per matrix cell with `composer require --no-update` before installing.
 
