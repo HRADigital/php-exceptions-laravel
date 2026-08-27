@@ -6,6 +6,7 @@ namespace HraDigital\Components\ExceptionRenderer\Tests;
 
 use HraDigital\Components\Exceptions\AbstractBaseException;
 use HraDigital\Components\Exceptions\Client\UnprocessableEntityException;
+use HraDigital\Components\ExceptionRenderer\Renderers\DefaultWebRenderer;
 use HraDigital\Components\ExceptionRenderer\Renderers\InputFailureWebRenderer;
 use HraDigital\Components\ExceptionRenderer\Renderers\UnprocessableEntityWebRenderer;
 use HraDigital\Components\ExceptionRenderer\Renderers\WebRendererInterface;
@@ -13,6 +14,7 @@ use HraDigital\Components\ExceptionRenderer\WebRenderer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Orchestra\Testbench\TestCase;
+use Symfony\Component\HttpFoundation\Response;
 
 class WebRendererTest extends TestCase
 {
@@ -25,16 +27,22 @@ class WebRendererTest extends TestCase
         $this->assertCount(2, $strategies);
         $this->assertInstanceOf(InputFailureWebRenderer::class, $strategies[0]);
         $this->assertInstanceOf(UnprocessableEntityWebRenderer::class, $strategies[1]);
+        $this->assertInstanceOf(DefaultWebRenderer::class, $renderer->getDefaultRenderer());
     }
 
-    public function testReturnsNullWhenNoStrategySupportsException(): void
+    public function testFallsBackToDefaultRendererWhenNoStrategySupportsException(): void
     {
         $renderer = WebRenderer::createRenderer();
-        $exception = $this->genericException();
+        $exception = $this->genericException(403);
         $request = Request::create('/widgets');
 
-        $this->assertFalse($renderer->supports($exception));
-        $this->assertNull($renderer->renderAsRedirect($exception, $request));
+        $this->assertTrue($renderer->supports($exception));
+
+        $response = $renderer->renderAsRedirect($exception, $request);
+
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertNotInstanceOf(RedirectResponse::class, $response);
+        $this->assertSame(403, $response->getStatusCode());
     }
 
     public function testRoutesUnprocessableEntityToFallbackStrategy(): void
@@ -75,9 +83,9 @@ class WebRendererTest extends TestCase
         $this->assertSame('http://override.test/done', $response->getTargetUrl());
     }
 
-    private function genericException(): AbstractBaseException
+    private function genericException(int $code = 500): AbstractBaseException
     {
-        return new class ('generic', 500) extends AbstractBaseException {
+        return new class ('generic', $code) extends AbstractBaseException {
             public function __construct(string $message, int $code)
             {
                 $this->code = $code;

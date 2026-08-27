@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Orchestra\Testbench\TestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class ExceptionsServiceProviderTest extends TestCase
 {
@@ -133,7 +134,7 @@ class ExceptionsServiceProviderTest extends TestCase
 
     public function testWebCallbackReturnsNullForApiRequest(): void
     {
-        $callback = $this->capturedRenderable(RedirectResponse::class);
+        $callback = $this->capturedRenderable(Response::class);
 
         $this->assertNotNull($callback, 'expected provider to register a web renderable callback');
 
@@ -146,21 +147,34 @@ class ExceptionsServiceProviderTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function testWebCallbackReturnsNullForUnsupportedExceptions(): void
+    public function testWebCallbackRendersStatusForExceptionsNoStrategyClaims(): void
     {
-        $callback = $this->capturedRenderable(RedirectResponse::class);
+        $callback = $this->capturedRenderable(Response::class);
 
-        $exception = Stubs::genericException('boom', 500);
+        $exception = Stubs::genericException('boom', 403);
         $request = Request::create('/widgets', 'GET');
 
         $result = $callback($exception, $request);
 
-        $this->assertNull($result);
+        $this->assertInstanceOf(Response::class, $result);
+        $this->assertSame(403, $result->getStatusCode());
+    }
+
+    public function testWebCallbackFallsBackToServerErrorWhenExceptionStatesNoHttpCode(): void
+    {
+        $callback = $this->capturedRenderable(Response::class);
+
+        $exception = Stubs::genericException('boom', 0);
+        $request = Request::create('/widgets', 'GET');
+
+        $result = $callback($exception, $request);
+
+        $this->assertSame(500, $result->getStatusCode());
     }
 
     public function testWebCallbackRedirectsBackForUnprocessableEntityOnHtmlRequest(): void
     {
-        $callback = $this->capturedRenderable(RedirectResponse::class);
+        $callback = $this->capturedRenderable(Response::class);
 
         $exception = new UnprocessableEntityException('the field is invalid');
         $request = Request::create('/widgets', 'POST', ['name' => 'x']);
@@ -189,6 +203,29 @@ class ExceptionsServiceProviderTest extends TestCase
         $response->assertRedirect('http://localhost/widgets/new');
         $response->assertSessionHas('error', 'label is invalid');
         $response->assertSessionHasInput(['label' => 'oops']);
+    }
+
+    public function testWebFlowRendersDeclaredStatusEndToEndFromWebRoute(): void
+    {
+        Route::middleware(['web'])->get('/widgets', function (): void {
+            throw Stubs::genericException('not for you', 403);
+        });
+
+        $response = $this->get('/widgets');
+
+        $response->assertStatus(403);
+    }
+
+    public function testExceptionOutsideThePackageKeepsRenderingThroughTheFramework(): void
+    {
+        Route::middleware(['web'])->get('/widgets', function (): void {
+            throw new \RuntimeException('unrelated');
+        });
+
+        $response = $this->get('/widgets');
+
+        // The Package claims nothing here - the framework's own handler answers.
+        $response->assertStatus(500);
     }
 
     /**

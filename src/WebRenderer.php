@@ -12,25 +12,30 @@ declare(strict_types=1);
 
 namespace HraDigital\Components\ExceptionRenderer;
 
+use HraDigital\Components\ExceptionRenderer\Renderers\DefaultWebRenderer;
 use HraDigital\Components\ExceptionRenderer\Renderers\InputFailureWebRenderer;
 use HraDigital\Components\ExceptionRenderer\Renderers\UnprocessableEntityWebRenderer;
 use HraDigital\Components\ExceptionRenderer\Renderers\WebRendererInterface;
 use HraDigital\Components\Exceptions\AbstractBaseException;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 use function array_merge;
 
 /**
- * Renders any AbstractBaseException as a Laravel RedirectResponse for non-API (web) requests,
- * picking the first matching strategy or returning NULL when no strategy supports the exception
- * (so Laravel's default error page keeps rendering for unrelated cases like 404 / 500).
+ * Renders any AbstractBaseException as a Laravel web response for non-API requests,
+ * picking the first matching strategy or falling back to DefaultWebRenderer.
+ *
+ * Every Package Exception is answered here. An Exception that does not extend
+ * AbstractBaseException never reaches this class, and keeps rendering through the
+ * framework's own handler.
  */
 class WebRenderer
 {
     public static function createRenderer(): self
     {
         return new self(
+            DefaultWebRenderer::createRenderer(),
             InputFailureWebRenderer::createRenderer(),
             UnprocessableEntityWebRenderer::createRenderer(),
         );
@@ -38,8 +43,10 @@ class WebRenderer
 
     /** @var WebRendererInterface[] */
     private array $strategies = [];
+    private DefaultWebRenderer $defaultRenderer;
 
     public function __construct(
+        DefaultWebRenderer $defaultRenderer,
         InputFailureWebRenderer $inputFailureRenderer,
         UnprocessableEntityWebRenderer $unprocessableEntityRenderer,
     ) {
@@ -47,6 +54,8 @@ class WebRenderer
             $inputFailureRenderer,
             $unprocessableEntityRenderer,
         ];
+
+        $this->defaultRenderer = $defaultRenderer;
     }
 
     public function add(WebRendererInterface $renderer): void
@@ -62,10 +71,10 @@ class WebRenderer
             }
         }
 
-        return false;
+        return $this->defaultRenderer->supports($exception);
     }
 
-    public function renderAsRedirect(AbstractBaseException $exception, Request $request): ?RedirectResponse
+    public function renderAsRedirect(AbstractBaseException $exception, Request $request): Response
     {
         foreach ($this->strategies as $strategy) {
             if ($strategy->supports($exception)) {
@@ -73,7 +82,7 @@ class WebRenderer
             }
         }
 
-        return null;
+        return $this->defaultRenderer->renderAsRedirect($exception, $request);
     }
 
     /**
@@ -82,5 +91,10 @@ class WebRenderer
     public function getStrategies(): array
     {
         return $this->strategies;
+    }
+
+    public function getDefaultRenderer(): DefaultWebRenderer
+    {
+        return $this->defaultRenderer;
     }
 }

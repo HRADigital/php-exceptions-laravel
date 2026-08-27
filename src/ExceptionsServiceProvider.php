@@ -14,10 +14,10 @@ namespace HraDigital\Components\ExceptionRenderer;
 
 use HraDigital\Components\Exceptions\AbstractBaseException;
 use Illuminate\Contracts\Debug\ExceptionHandler;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 use function is_object;
 use function is_string;
@@ -60,7 +60,7 @@ class ExceptionsServiceProvider extends ServiceProvider
         );
 
         $handler->renderable(
-            static function (AbstractBaseException $exception, Request $request) use ($webRenderer): ?RedirectResponse {
+            static function (AbstractBaseException $exception, Request $request) use ($webRenderer): ?Response {
                 if (self::isApiRequest($request)) {
                     return null;
                 }
